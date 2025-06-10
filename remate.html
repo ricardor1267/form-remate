@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Precio con Impuestos</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .calculator-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            max-width: 500px;
+            width: 100%;
+            transform: translateY(0);
+            transition: transform 0.3s ease;
+        }
+
+        .calculator-container:hover {
+            transform: translateY(-5px);
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1rem;
+        }
+
+        .input-group {
+            margin-bottom: 30px;
+        }
+
+        .price-input-group {
+            margin-bottom: 40px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 20px;
+            padding: 25px;
+            border: 2px solid rgba(102, 126, 234, 0.2);
+        }
+
+        label {
+            display: block;
+            margin-bottom: 12px;
+            color: #333;
+            font-weight: 700;
+            font-size: 1.3rem;
+            text-align: center;
+        }
+
+        .price-input-group label {
+            color: #667eea;
+            font-size: 1.4rem;
+            margin-bottom: 15px;
+        }
+
+        input[type="number"], input[type="text"] {
+            width: 100%;
+            padding: 20px 25px;
+            border: 3px solid #e1e5e9;
+            border-radius: 15px;
+            font-size: 2rem;
+            font-weight: 600;
+            text-align: center;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+            background: #fff;
+            color: #333;
+            font-family: 'Courier New', monospace;
+        }
+
+        input[type="number"]:focus, input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.15);
+            transform: scale(1.02);
+            background: #fafbff;
+        }
+
+        #basePrice {
+            font-size: 2.5rem;
+            padding: 25px 30px;
+            color: #2c3e50;
+            background: linear-gradient(135deg, #f8f9ff 0%, #ffffff 100%);
+            border: 3px solid #667eea;
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.1);
+        }
+
+        #basePrice:focus {
+            border-color: #4CAF50;
+            box-shadow: 0 0 0 4px rgba(76, 175, 80, 0.2);
+            background: linear-gradient(135deg, #f0fff4 0%, #ffffff 100%);
+        }
+
+        #basePrice::placeholder {
+            color: #bbb;
+            font-weight: 400;
+        }
+
+        .tax-input {
+            position: relative;
+        }
+
+        .tax-input::after {
+            content: '%';
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #666;
+            font-size: 1.2rem;
+            pointer-events: none;
+        }
+
+        .result-container {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            margin-top: 30px;
+            transform: scale(0.95);
+            transition: all 0.3s ease;
+        }
+
+        .result-container.active {
+            transform: scale(1);
+            box-shadow: 0 10px 25px rgba(76, 175, 80, 0.3);
+        }
+
+        .result-label {
+            color: white;
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+            opacity: 0.9;
+        }
+
+        .result-value {
+            color: white;
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .breakdown {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .breakdown-item {
+            text-align: center;
+            color: white;
+        }
+
+        .breakdown-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            margin-bottom: 5px;
+        }
+
+        .breakdown-value {
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .currency {
+            color: #4CAF50;
+            font-weight: 600;
+        }
+
+        @media (max-width: 480px) {
+            .calculator-container {
+                padding: 25px;
+            }
+            
+            h1 {
+                font-size: 1.5rem;
+            }
+            
+            .result-value {
+                font-size: 2rem;
+            }
+            
+            .breakdown {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+
+        .pulse {
+            animation: pulse 0.5s ease-in-out;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+    <div class="calculator-container">
+        <h1>💰 Calculadora de Impuestos</h1>
+        <p class="subtitle">Calcula el precio final con impuestos del remate</p>
+        
+        <div class="price-input-group">
+            <label for="basePrice">💵 Precio Base (CLP):</label>
+            <input type="text" id="basePrice" placeholder="Ej: 4.000.000" inputmode="numeric">
+        </div>
+
+        <div class="input-group">
+            <label for="taxRate">📊 Porcentaje de Impuesto:</label>
+            <div class="tax-input">
+                <input type="number" id="taxRate" value="30" min="0" max="100" step="0.1">
+            </div>
+        </div>
+
+        <div class="result-container" id="resultContainer">
+            <div class="result-label">💳 Precio Final a Pagar</div>
+            <div class="result-value" id="finalPrice">$0</div>
+            
+            <div class="breakdown">
+                <div class="breakdown-item">
+                    <div class="breakdown-label">Precio Base</div>
+                    <div class="breakdown-value" id="basePriceDisplay">$0</div>
+                </div>
+                <div class="breakdown-item">
+                    <div class="breakdown-label">+</div>
+                    <div class="breakdown-value" style="font-size: 1.5rem;">+</div>
+                </div>
+                <div class="breakdown-item">
+                    <div class="breakdown-label">Impuestos</div>
+                    <div class="breakdown-value" id="taxAmount">$0</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const basePriceInput = document.getElementById('basePrice');
+        const taxRateInput = document.getElementById('taxRate');
+        const finalPriceElement = document.getElementById('finalPrice');
+        const basePriceDisplay = document.getElementById('basePriceDisplay');
+        const taxAmountElement = document.getElementById('taxAmount');
+        const resultContainer = document.getElementById('resultContainer');
+
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('es-CL', {
+                style: 'currency',
+                currency: 'CLP',
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            }).format(amount);
+        }
+
+        function calculateTotal() {
+            const basePrice = parseFloat(basePriceInput.value) || 0;
+            const taxRate = parseFloat(taxRateInput.value) || 0;
+            
+            const taxAmount = basePrice * (taxRate / 100);
+            const finalPrice = basePrice + taxAmount;
+
+            // Actualizar la interfaz
+            basePriceDisplay.textContent = formatCurrency(basePrice);
+            taxAmountElement.textContent = formatCurrency(taxAmount);
+            finalPriceElement.textContent = formatCurrency(finalPrice);
+
+            // Activar animación si hay valores
+            if (basePrice > 0) {
+                resultContainer.classList.add('active');
+                resultContainer.classList.add('pulse');
+                setTimeout(() => {
+                    resultContainer.classList.remove('pulse');
+                }, 500);
+            } else {
+                resultContainer.classList.remove('active');
+            }
+        }
+
+        // Calcular en tiempo real mientras el usuario escribe
+        taxRateInput.addEventListener('input', calculateTotal);
+
+        // Cálculo inicial
+        calculateTotal();
+
+        // Enfocar automáticamente el primer input
+        basePriceInput.focus();
+
+        // Agregar efectos de sonido visuales (vibración en móviles)
+        basePriceInput.addEventListener('input', () => {
+            if (navigator.vibrate && basePriceInput.value) {
+                navigator.vibrate(10);
+            }
+        });
+
+        // Formatear números con puntos para miles mientras se escriben
+        function formatInputNumber(value) {
+            // Remover todos los puntos existentes
+            const cleanValue = value.replace(/\./g, '');
+            // Agregar puntos cada 3 dígitos
+            return cleanValue.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+        }
+
+        function parseInputNumber(value) {
+            // Convertir el valor formateado de vuelta a número
+            return parseFloat(value.replace(/\./g, '')) || 0;
+        }
+
+        basePriceInput.addEventListener('input', function(e) {
+            const cursorPosition = e.target.selectionStart;
+            const oldValue = e.target.value;
+            const oldLength = oldValue.length;
+            
+            // Remover caracteres no numéricos excepto puntos
+            let cleanValue = oldValue.replace(/[^\d.]/g, '');
+            
+            // Remover todos los puntos y mantener solo dígitos
+            const numbersOnly = cleanValue.replace(/\./g, '');
+            
+            // Formatear con puntos
+            const formattedValue = formatInputNumber(numbersOnly);
+            
+            // Actualizar el valor
+            e.target.value = formattedValue;
+            
+            // Ajustar la posición del cursor
+            const newLength = formattedValue.length;
+            const lengthDiff = newLength - oldLength;
+            const newCursorPosition = cursorPosition + lengthDiff;
+            
+            // Establecer la nueva posición del cursor
+            setTimeout(() => {
+                e.target.setSelectionRange(newCursorPosition, newCursorPosition);
+            }, 0);
+            
+            // Calcular el total
+            calculateTotal();
+        });
+
+        // Actualizar la función calculateTotal para usar el parser
+        function calculateTotal() {
+            const basePrice = parseInputNumber(basePriceInput.value);
+            const taxRate = parseFloat(taxRateInput.value) || 0;
+            
+            const taxAmount = basePrice * (taxRate / 100);
+            const finalPrice = basePrice + taxAmount;
+
+            // Actualizar la interfaz
+            basePriceDisplay.textContent = formatCurrency(basePrice);
+            taxAmountElement.textContent = formatCurrency(taxAmount);
+            finalPriceElement.textContent = formatCurrency(finalPrice);
+
+            // Activar animación si hay valores
+            if (basePrice > 0) {
+                resultContainer.classList.add('active');
+                resultContainer.classList.add('pulse');
+                setTimeout(() => {
+                    resultContainer.classList.remove('pulse');
+                }, 500);
+            } else {
+                resultContainer.classList.remove('active');
+            }
+        }
+    </script>
+</body>
+</html>
